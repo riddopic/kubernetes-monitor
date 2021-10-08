@@ -7,6 +7,8 @@
 monitorSecrets: snyk-monitor
 certsConfigMap: snyk-monitor-certs
 registriesConfConfigMap: snyk-monitor-registries-conf
+# Used to configure docker-credential-magic (https://github.com/docker-credential-magic/docker-credential-magic).
+dockerCredentialConfigMap: snyk-monitor-docker-credential-conf
 
 # An external ConfigMap to use for loading policies into snyk-monitor.
 # If not set, defaultWorkloadPoliciesMap will be used.

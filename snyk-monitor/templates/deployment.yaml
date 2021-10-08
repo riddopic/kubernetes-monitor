@@ -89,6 +89,8 @@ spec:
           - name: excluded-namespaces
             mountPath: "/etc/config"
           {{- end }}
+          - name: docker-credential-conf
+            mountPath: /opt/magic/etc
           env:
           - name: NODE_EXTRA_CA_CERTS
             value: {{ .Values.extraCaCerts }}
@@ -123,6 +125,8 @@ spec:
             value: {{ .Values.log_level }}
           - name: SKIP_K8S_JOBS
             value: {{ quote .Values.skip_k8s_jobs }}
+          - name: DOCKER_CREDENTIAL_MAGIC_CONFIG
+            value: /opt/magic
           {{- with .Values.envs }}
           {{- toYaml . | trim | nindent 10 -}}
           {{- end }}
@@ -185,6 +189,10 @@ spec:
             - serviceAccountToken:
                 path: token  
         {{- end }}
+        - name: docker-credential-conf
+          configMap:
+            name: {{ .Values.dockerCredentialConfigMap }}
+            optional: true
         - name: registries-conf
           configMap:
             name: {{ .Values.registriesConfConfigMap }}

@@ -38,3 +38,28 @@ data:
       input.kind != "Pod"
     }
 {{ end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.dockerCredentialConfigMap }}
+  labels:
+    app.kubernetes.io/name: {{ include "snyk-monitor.name" . }}
+    helm.sh/chart: {{ include "snyk-monitor.chart" . }}
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+data:
+  aws.yaml: |-
+    helper: ecr-login
+    domains:
+      - amazonaws.com
+      - ecr.aws
+  azure.yaml: |-
+    helper: acr-env
+    domains:
+      - azurecr.io
+  gcp.yaml: |-
+    helper: gcr
+    domains:
+      - gcr.io
+      - pkg.dev

@@ -10,8 +10,13 @@ RUN cd $GOPATH/src/github.com/containers/skopeo \
   && make bin/skopeo DISABLE_CGO=1 \
   && make install
 
+FROM golang:1.17 AS cred-helpers-build
+
 RUN go get -u github.com/awslabs/amazon-ecr-credential-helper/ecr-login/cli/docker-credential-ecr-login
-RUN cp $HOME/go/bin/docker-credential-ecr-login /usr/local/bin/docker-credential-ecr-login
+RUN go get -u github.com/GoogleCloudPlatform/docker-credential-gcr
+RUN go get -u github.com/chrismellard/docker-credential-acr-env
+RUN curl -Lo /tmp/docker-credential-magic.tar.gz https://github.com/docker-credential-magic/docker-credential-magic/releases/latest/download/docker-credential-magic_Linux_x86_64.tar.gz
+RUN tar -C /go/bin -xf /tmp/docker-credential-magic.tar.gz docker-credential-magic
 
 #---------------------------------------------------------------------
 # STAGE 2: Build the kubernetes-monitor
@@ -37,18 +42,16 @@ RUN chmod 755 /usr/bin/dumb-init
 RUN groupadd -g 10001 snyk
 RUN useradd -g snyk -d /srv/app -u 10001 snyk
 
-# Install gcloud 
-RUN curl -sL https://sdk.cloud.google.com > /install.sh
-RUN bash /install.sh --disable-prompts --install-dir=/ && rm /google-cloud-sdk/bin/anthoscli
-ENV PATH=/google-cloud-sdk/bin:$PATH
-RUN rm /install.sh
-
 WORKDIR /srv/app
 
 COPY --chown=snyk:snyk --from=skopeo-build /usr/local/bin/skopeo /usr/bin/skopeo
-COPY --chown=snyk:snyk --from=skopeo-build /usr/local/bin/docker-credential-ecr-login /usr/bin/docker-credential-ecr-login
 COPY --chown=snyk:snyk --from=skopeo-build /etc/containers/registries.d/default.yaml /etc/containers/registries.d/default.yaml
 COPY --chown=snyk:snyk --from=skopeo-build /etc/containers/policy.json /etc/containers/policy.json
+
+COPY --chown=snyk:snyk --from=cred-helpers-build /go/bin/docker-credential-gcr /usr/bin/docker-credential-gcr
+COPY --chown=snyk:snyk --from=cred-helpers-build /go/bin/docker-credential-ecr-login /usr/bin/docker-credential-ecr-login
+COPY --chown=snyk:snyk --from=cred-helpers-build /go/bin/docker-credential-acr-env /usr/bin/docker-credential-acr-env
+COPY --chown=snyk:snyk --from=cred-helpers-build /go/bin/docker-credential-magic /usr/bin/docker-credential-magic
 
 # Add manifest files and install before adding anything else to take advantage of layer caching
 ADD --chown=snyk:snyk package.json package-lock.json ./
