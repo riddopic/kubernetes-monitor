@@ -134,7 +134,8 @@ async function createSecretForGcrIoAccess(): Promise<void> {
     {
       'docker-server': 'https://gcr.io',
       'docker-username': '_json_key',
-      'docker-email': 'egg@snyk.io',
+      'docker-email':
+        'kubernetes-monitor-integration@snyk-k8s-fixtures.iam.gserviceaccount.com',
       'docker-password': gcrToken,
     },
     gcrKubectlSecretsKeyPrefix,
